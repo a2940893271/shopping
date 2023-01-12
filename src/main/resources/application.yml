@@ -1,0 +1,36 @@
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  application:
+    name: shopping   # 应用名称
+  datasource:
+    druid:
+      url: jdbc:mysql://localhost:3306/or?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+      username: root
+      password: root
+      driver-class-name: com.mysql.jdbc.Driver
+server:
+  port: 8080   # 应用服务 WEB 访问端口
+knife4j:
+  enable: true
+  openapi:
+    title: Knife4j官方文档
+    description: Springboot+MybatisPlus+Mysql+Swagger3+Knife4j+jwt
+    email: 2940893271@qq.com
+    concat: 澈
+    url: https://baidu.com
+    version: v4.0
+    license: Apache 2.0
+    license-url: https://baidu.com
+    terms-of-service-url: https://baidu.com
+    group:
+      test1:
+        group-name: 分组名称
+        api-rule: package
+        api-rule-resources:
+          - cn.bdqn.shopping
+
+
+
+
