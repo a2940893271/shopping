@@ -30,7 +30,17 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - cn.bdqn.shopping
-
+mybatis:
+  typeAliasesPackage: cn.bdqn.shopping.entity
+  mapperLocations: classpath:mapper/*.xml
+#  configLocation: classpath:/mybatis-config.xml
+mybatis-plus:
+  type-aliases-package: cn.bdqn.shopping.entity
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: false
+  mapper-locations:
+    - classpath*:/mapping/*.xml
 
 
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.bdqn.shopping.mapper.BalanceMapper">
+<!--    <resultMap id="BaseResultMap" type="cn.bdqn.shoppin">-->
+<!--        <id column="userId" jdbcType="INTEGER" property="userid" />-->
+<!--        <result column="username" jdbcType="VARCHAR" property="username" />-->
+<!--        <result column="password" jdbcType="VARCHAR" property="password" />-->
+<!--        <result column="regTime" jdbcType="TIMESTAMP" property="regtime" />-->
+<!--        <result column="email" jdbcType="VARCHAR" property="email" />-->
+<!--        <result column="telephone" jdbcType="VARCHAR" property="telephone" />-->
+<!--    </resultMap>-->
+<!--    <select id="balanceInquiryId" resultType="cn.bdqn.shopping.entity.Balance" >-->
+<!--        SELECT * FROM `balance` WHERE userId=#{userId}-->
+<!--    </select>-->
+</mapper>

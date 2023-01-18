@@ -1,10 +1,14 @@
 package cn.bdqn.shopping.service.impl;
 
-import cn.bdqn.shopping.bean.ServiceRes;
-import cn.bdqn.shopping.bean.User;
+import cn.bdqn.shopping.utils.Result;
+import cn.bdqn.shopping.vo.ChangePasswordReq;
+import cn.bdqn.shopping.vo.LoginReq;
+import cn.bdqn.shopping.vo.LoginResult;
+import cn.bdqn.shopping.entity.User;
 import cn.bdqn.shopping.mapper.UserMapper;
 import cn.bdqn.shopping.service.UserService;
 import cn.bdqn.shopping.utils.JwtUtil;
+import cn.bdqn.shopping.vo.RegisterReq;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,53 +26,59 @@ import java.util.Map;
 public class UserServiceImpl implements UserService {
 
     @Autowired
-   private UserMapper userMapper;
+    private UserMapper userMapper;
 
     /**
      * 注册
-     * @param user 用户类
+     *
+     * @param
      * @return ServiceRes
      */
     @Override
-    public ServiceRes register(User user) {
+    public Result<?> register(RegisterReq registerReq) {
+        User user=new User();
+        user.setUserName(registerReq.getUserName());
+        user.setPassword(registerReq.getPassword());
 
         // 判断用户名是否唯一
-        if(this.checkUserNameIsUnique(user)) {
-
+        if (this.checkUserNameIsUnique(user)) {
             // 判断用户名密码是否合法
-            if(this.checkUserNameAndPassword(user)) {
-
+            if (this.checkUserNameAndPassword(user)) {
                 // 密码MD5加密
-                user.setPassWord(this.MD5Code(user.getPassWord()));
+                user.setPassword(this.MD5Code(user.getPassword()));
                 // 加入创建时间
                 user.setCreateTime(new Date());
                 // 入库
                 userMapper.insert(user);
-                return new ServiceRes(1, "注册成功");
-
-            } else return new ServiceRes(-1, "用户名或密码不合法");
-
-        } else return new ServiceRes(-1, "用户名已存在");
-
+                return Result.success();
+            } else {
+                return Result.error("用户名或密码不合法");
+            }
+        } else {
+            return Result.error("用户名已存在");
+        }
     }
 
     /**
      * 登录
-     * @param user 用户类
+     *
+     * @param
      * @return ServiceRes
      */
     @Override
-    public ServiceRes login(User user) {
-
+    public Result<LoginResult> login(LoginReq loginReq) {
+        User user=new User();
+        user.setUserName(loginReq.getUserName());
+        user.setPassword(loginReq.getPassword());
         // 判断用户名密码是否合法
-        if(this.checkUserNameAndPassword(user)) {
+        if (this.checkUserNameAndPassword(user)) {
 
             // 密码MD5加密
-            user.setPassWord(this.MD5Code(user.getPassWord()));
+            user.setPassword(this.MD5Code(user.getPassword()));
 
             // 检查用户是否存在
             User curUser = this.checkUserIsExit(user);
-            if(curUser!=null) {
+            if (curUser != null) {
 
                 // 更新用户最后登录时间
                 curUser.setLastLogin(new Date());
@@ -78,27 +88,35 @@ public class UserServiceImpl implements UserService {
                 Map<String, String> payload = new HashMap<>();
                 payload.put("userId", curUser.getId().toString()); // 加入一些非敏感的用户信息
                 payload.put("userName", curUser.getUserName());    // 加入一些非敏感的用户信息
-                String jwt = JwtUtil.generateToken(payload);
-                return new ServiceRes(1, "登录成功", jwt);
+                String token = JwtUtil.generateToken(payload);
+                LoginResult loginResult = new LoginResult();
+                loginResult.setToken(token);
+                return Result.success(loginResult);
 
-            } else return new ServiceRes(-1, "用户名或密码错误");
+            } else return Result.error("登陆失败");
 
-        } else return new ServiceRes(-1, "用户名或密码不合法");
+        } else return Result.error("用户名或密码不合法");
 
     }
 
     /**
      * 改密业务
+     *
      * @return ServiceRes
      */
     @Override
-    public ServiceRes changePassWord(User user) {
-        if(this.updatePassWord(user)) return new ServiceRes(1, "改密成功");
-        else return new ServiceRes(-1, "改密失败");
+    public Result<?> changePassWord(User user, ChangePasswordReq changePasswordReq) {
+        //TODO::验证原始密码待验证
+        if (this.updatePassWord(user)){
+            return Result.success();
+        }else{
+            return Result.error();
+        }
     }
 
     /**
      * 非对称加密
+     *
      * @param text 明文
      * @return 密文
      */
@@ -108,30 +126,33 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 修改密码方法
+     *
      * @param user 传入用户名和新密码
      * @return 改密成功返回 true 失败返回 false
      */
     private Boolean updatePassWord(User user) {
         // 密码非对称加密
-        user.setPassWord(this.MD5Code(user.getPassWord()));
+        user.setPassword(this.MD5Code(user.getPassword()));
         // 更新密码
-        return userMapper.updateById(user)>0;
+        return userMapper.updateById(user) > 0;
     }
 
     /**
      * 检查用户是否存在【用户名密码相同】
+     *
      * @param user 用户类
      * @return 用户存在返回 用户对象 不存在返回 null
      */
     private User checkUserIsExit(User user) {
         LambdaQueryWrapper<User> lqw = new LambdaQueryWrapper<>();
         lqw.eq(User::getUserName, user.getUserName());
-        lqw.eq(User::getPassWord, user.getPassWord());
+        lqw.eq(User::getPassword, user.getPassword());
         return userMapper.selectOne(lqw);
     }
 
     /**
      * 判断用户名是否唯一
+     *
      * @param user 用户类
      * @return 唯一返回 true 不唯一返回 false
      */
@@ -144,15 +165,14 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 判断用户名密码是否合法
+     *
      * @param user 用户类
      * @return 满足 【英文字母、数字、下划线】 返回 true，否则返回 false
      */
     private Boolean checkUserNameAndPassword(User user) {
         String regex = "^[_a-z0-9A-Z]+$";
-        return user.getUserName().matches(regex) && user.getPassWord().matches(regex);
+        return user.getUserName().matches(regex) && user.getPassword().matches(regex);
     }
-
-
 }
 
 

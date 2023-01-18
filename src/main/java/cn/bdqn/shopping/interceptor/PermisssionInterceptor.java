@@ -1,9 +1,9 @@
 package cn.bdqn.shopping.interceptor;
 
 
-import cn.bdqn.shopping.bean.ControllerRes;
-import cn.bdqn.shopping.bean.User;
+import cn.bdqn.shopping.entity.User;
 import cn.bdqn.shopping.utils.JwtUtil;
+import cn.bdqn.shopping.utils.Result;
 import com.alibaba.fastjson.JSONObject;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
@@ -31,36 +31,36 @@ public class PermisssionInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
 
         // 检查用户JWT
-        String jwt = request.getHeader("token");
+        String token = request.getHeader("token");
 
         // 校验并取出私有信息
         try {
-//            if (jwt==null){
-//                // token 解码
-//                DecodedJWT dj = JwtUtil.decodeToken(jwt);
-//
-//                // 取出基本用户信息加入请求头 --------------------------------------------------------------------------------
-//                String userId = dj.getClaim("userId").asString();
-//                String userName = dj.getClaim("userName").asString();
-//                // jwt校验合格的，将 jwt 中存的用户信息加入请求头，不合格的，请求头存个空用户
-//                request.setAttribute("jwt-user", userId!=null?new User(Integer.valueOf(userId), userName):new User());
-//                // -------------------------------------------------------------------------------------------------------
-//
-//                // 计算当前时间是否超过过期时间的一半，如果是就帮用户续签 --------------------------
-//                // 此处并不是永久续签，只是为 大于过期时间的一半 且 小于过期时间 的 token 续签
-//                Long expTime = dj.getExpiresAt().getTime();
-//                Long iatTime = dj.getIssuedAt().getTime();
-//                Long nowTime = new Date().getTime();
-//                if((nowTime-iatTime) > (expTime-iatTime)/2) {
-//                    // 生成新的jwt
-//                    Map<String, String> payload = new HashMap<>();
-//                    payload.put("userId", userId); // 加入一些非敏感的用户信息
-//                    payload.put("userName", userName);    // 加入一些非敏感的用户信息
-//                    String newJwt = JwtUtil.generateToken(payload);
-//                    // 加入返回头
-//                    response.addHeader("token", newJwt);
-//                }
-//            }
+            if (token!=null){
+                // token 解码
+                DecodedJWT dj = JwtUtil.decodeToken(token);
+
+                // 取出基本用户信息加入请求头 --------------------------------------------------------------------------------
+                String userId = dj.getClaim("userId").asString();
+                String userName = dj.getClaim("userName").asString();
+                // jwt校验合格的，将 jwt 中存的用户信息加入请求头，不合格的，请求头存个空用户
+                request.setAttribute("user", userId!=null?new User(Integer.valueOf(userId), userName):new User());
+                // -------------------------------------------------------------------------------------------------------
+
+                // 计算当前时间是否超过过期时间的一半，如果是就帮用户续签 --------------------------
+                // 此处并不是永久续签，只是为 大于过期时间的一半 且 小于过期时间 的 token 续签
+                Long expTime = dj.getExpiresAt().getTime();
+                Long iatTime = dj.getIssuedAt().getTime();
+                Long nowTime = new Date().getTime();
+                if((nowTime-iatTime) > (expTime-iatTime)/2) {
+                    // 生成新的jwt
+                    Map<String, String> payload = new HashMap<>();
+                    payload.put("userId", userId); // 加入一些非敏感的用户信息
+                    payload.put("userName", userName);    // 加入一些非敏感的用户信息
+                    String newJwt = JwtUtil.generateToken(payload);
+                    // 加入返回头
+                    response.addHeader("token", newJwt);
+                }
+            }
 
 
             // -----------------------------------------------------------------------
@@ -69,12 +69,12 @@ public class PermisssionInterceptor implements HandlerInterceptor {
 
         } catch (JWTDecodeException e) {
             log.error("令牌错误");
-            addResBody(response, new ControllerRes(-1, "令牌错误"));  // 新增返回体
+            addResBody(response, Result.error(5001, "令牌错误"));  // 新增返回体
             return false;
 
         } catch (TokenExpiredException e) {
             log.error("令牌过期");
-            addResBody(response, new ControllerRes(-1, "令牌过期"));  // 新增返回体
+            addResBody(response, Result.error(5002, "令牌过期"));  // 新增返回体
             return false;
         }
 
@@ -92,10 +92,8 @@ public class PermisssionInterceptor implements HandlerInterceptor {
         HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
     }
 
-    private void addResBody(HttpServletResponse response, ControllerRes res) throws IOException {
-
+    private void addResBody(HttpServletResponse response, Result<?> res) throws IOException {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);        // 设置状态码
-
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json; charset=utf-8");
         PrintWriter out = response.getWriter();
