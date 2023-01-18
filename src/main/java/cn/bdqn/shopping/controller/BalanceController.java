@@ -41,5 +41,4 @@ public class BalanceController extends BaseController {
         wrapper.eq("user_id", userId);
         return Result.success(balanceMapper.selectList(wrapper));
     }
-
 }
